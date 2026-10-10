@@ -173,8 +173,9 @@ def questions():
     path = os.path.join(CACHE, "mmlu.csv")
     if not os.path.exists(path):
         os.makedirs(CACHE, exist_ok=True)
-        urllib.request.urlretrieve(MMLU_URL, path + ".part")
-        os.replace(path + ".part", path)
+        part = f"{path}.{os.getpid()}.part"  # one per process: two GPUs may download at once
+        urllib.request.urlretrieve(MMLU_URL, part)
+        os.replace(part, path)
     digest = hashlib.sha256(open(path, "rb").read()).hexdigest()
     if digest != MMLU_SHA256:
         raise RuntimeError(f"{path}: sha256 {digest}, expected {MMLU_SHA256}")

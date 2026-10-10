@@ -16,6 +16,7 @@ python -c "import torch, vllm; print('torch', torch.__version__, 'cuda', torch.v
 python -c "from vllm import LLM" || { echo "vLLM does not import; stopping"; exit 1; }
 LIMIT=$( [ -n "$QUICK" ] && echo "--limit 500" )
 mkdir -p runs
+python -c "from osmium import simple_evals; simple_evals.questions()"  # download once, before both GPUs start
 CUDA_VISIBLE_DEVICES=0 python scripts/eval_mmlu.py --model Qwen/Qwen3-4B $LIMIT --out runs/m0 > runs/gpu0.log 2>&1 &
 P0=$!
 CUDA_VISIBLE_DEVICES=1 python scripts/eval_mmlu.py --model Qwen/Qwen2.5-3B-Instruct $LIMIT --out runs/m0 > runs/gpu1.log 2>&1 &
