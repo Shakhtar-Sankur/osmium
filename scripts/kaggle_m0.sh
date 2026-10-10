@@ -7,7 +7,13 @@ cd "$(dirname "$0")/.."
 echo "== osmium M0: osmium $(git rev-parse --short HEAD)"
 nvidia-smi --query-gpu=index,name,driver_version,memory.total --format=csv,noheader
 pip install -q "vllm==0.31.0" 2>&1 | grep -v -i "dependency resolver\|incompatible\|^$" | tail -2 || true
+# vLLM brings PyTorch built for CUDA 13, but Kaggle's own TorchAudio (built for CUDA 12.8) has the
+# version number vLLM asks for, so pip keeps it, and it then raises on import next to the new
+# PyTorch. vLLM treats a missing TorchAudio as optional (it only needs it for audio models) but
+# not a broken one, so remove it when it does not load.
+python -c "import torchaudio" >/dev/null 2>&1 || { pip uninstall -y -q torchaudio; echo "removed Kaggle's TorchAudio (CUDA build mismatch; not needed for text)"; }
 python -c "import torch, vllm; print('torch', torch.__version__, 'cuda', torch.version.cuda, '| vllm', vllm.__version__, '| GPU usable:', torch.cuda.is_available())"
+python -c "from vllm import LLM" || { echo "vLLM does not import; stopping"; exit 1; }
 LIMIT=$( [ -n "$QUICK" ] && echo "--limit 500" )
 mkdir -p runs
 CUDA_VISIBLE_DEVICES=0 python scripts/eval_mmlu.py --model Qwen/Qwen3-4B $LIMIT --out runs/m0 > runs/gpu0.log 2>&1 &
