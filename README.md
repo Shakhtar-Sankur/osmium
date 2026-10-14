@@ -61,3 +61,7 @@ OSMIUM_DATA=1 python -m pytest -q tests      # downloads simple-evals' MMLU file
 pip install vllm==0.31.0                     # on a GPU
 python scripts/eval_mmlu.py --model Qwen/Qwen3-4B --limit 500
 ```
+
+## License
+
+Apache-2.0. See [LICENSE](LICENSE).
